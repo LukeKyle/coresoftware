@@ -13,6 +13,8 @@
 
 #include <trackbase/TrkrCluster.h>
 #include <trackbase/TrkrClusterContainer.h>
+#include <trackbase/TpcDefs.h>
+#include <trackbase/TrkrDefs.h>
 #include <trackbase_historic/TrackSeed.h>
 #include <trackbase_historic/TrackSeedContainer.h>
 #include <trackbase_historic/TrackSeedContainer_v1.h>
@@ -78,6 +80,13 @@ int PHCosmicSeeder::process_event(PHCompositeNode* /*unused*/)
     for (auto citer = range.first; citer != range.second; ++citer)
     {
       const auto ckey = citer->first;
+      
+      const auto side = TpcDefs::getSide(ckey);
+      const auto sector = TpcDefs::getSectorId(ckey);
+      const auto layer = TrkrDefs::getLayer(ckey);
+      if(side==0 && ((sector==12 && layer>38) || (sector==14 && (layer>22 && layer<39)) || (sector==15 && (layer>6 && layer<23)) || (sector==19 && (layer>6 && layer<23)) || (sector==21 && (layer>22 && layer<39)) || (sector==22 && ((layer>22 && layer<39) || layer>38)) || (sector==23 && layer>38))) continue;
+      else if(side==1 && ((sector==2 && layer>38) || (sector==6 && (layer>22 && layer<39)) || (sector==8 && layer>38) || (sector==10 && layer>38))) continue;
+
       const auto cluster = citer->second;
       const auto global = m_tGeometry->getGlobalPosition(ckey, cluster);
       clusterPositions.insert(std::make_pair(ckey, global));
