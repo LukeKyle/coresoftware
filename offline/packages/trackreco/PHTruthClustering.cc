@@ -776,9 +776,12 @@ void PHTruthClustering::G4ClusterSize(TrkrDefs::cluskey& ckey,unsigned int layer
       double g4max_phi =  outer_phi + sigmas * sqrt(  pow(phidiffusion, 2) + pow(added_smear_trans, 2) + pow(gem_spread, 2) ) / radius;
       double g4min_phi =  inner_phi - sigmas * sqrt(  pow(phidiffusion, 2) + pow(added_smear_trans, 2) + pow(gem_spread, 2) ) / radius;
 
+      unsigned int side=0;
+      if(avge_z>0) side=1;
+
       // find the bins containing these max and min z edges
-      unsigned int phibinmin = layergeom->get_phibin(g4min_phi);
-      unsigned int phibinmax = layergeom->get_phibin(g4max_phi);
+      unsigned int phibinmin = layergeom->get_phibin(g4min_phi,side);
+      unsigned int phibinmax = layergeom->get_phibin(g4max_phi,side);
       unsigned int phibinwidth = phibinmax - phibinmin + 1;
       g4phisize = (double) phibinwidth * layergeom->get_phistep() * layergeom->get_radius();
 

@@ -21,6 +21,7 @@
 #include <trackbase_historic/TrackSeed_v2.h>
 
 #include <TFile.h>
+#include <TTree.h>
 #include <TNtuple.h>
 
 #include <cmath>
@@ -74,6 +75,16 @@ int PHCosmicSeeder::InitRun(PHCompositeNode* topNode)
 int PHCosmicSeeder::process_event(PHCompositeNode* /*unused*/)
 {
   PHCosmicSeeder::PositionMap clusterPositions;
+
+  // uint8_t side;
+  // uint8_t sector;
+  // uint8_t layer;
+
+  // TFile *mFile = new TFile("/sphenix/user/llegnosky/LukeKyle/TrackingAnalysis/CosmicTracking/TPCInfo.root","RECREATE");
+  // TTree *t = new TTree("t","TPC Info");
+  // t->Branch("side",&side,"side/b");
+  // t->Branch("sector",&sector,"sector/b");
+  // t->Branch("layer",&layer,"layer/b");
   for (const auto& hitsetkey : m_clusterContainer->getHitSetKeys(m_trackerId))
   {
     auto range = m_clusterContainer->getClusters(hitsetkey);
@@ -81,17 +92,25 @@ int PHCosmicSeeder::process_event(PHCompositeNode* /*unused*/)
     {
       const auto ckey = citer->first;
       
+      // side = TpcDefs::getSide(ckey);
+      // sector = TpcDefs::getSectorId(ckey);
+      // layer = TrkrDefs::getLayer(ckey);
+
       const auto side = TpcDefs::getSide(ckey);
       const auto sector = TpcDefs::getSectorId(ckey);
       const auto layer = TrkrDefs::getLayer(ckey);
+
+      //t->Fill();
       if(side==0 && ((sector==12 && layer>38) || (sector==14 && (layer>22 && layer<39)) || (sector==15 && (layer>6 && layer<23)) || (sector==19 && (layer>6 && layer<23)) || (sector==21 && (layer>22 && layer<39)) || (sector==22 && ((layer>22 && layer<39) || layer>38)) || (sector==23 && layer>38))) continue;
       else if(side==1 && ((sector==2 && layer>38) || (sector==6 && (layer>22 && layer<39)) || (sector==8 && layer>38) || (sector==10 && layer>38))) continue;
+      if(side==0 || side==1) continue;
 
       const auto cluster = citer->second;
       const auto global = m_tGeometry->getGlobalPosition(ckey, cluster);
       clusterPositions.insert(std::make_pair(ckey, global));
     }
   }
+  //mFile->Write();
   if (Verbosity() > 2)
   {
     std::cout << "cluster map size is " << clusterPositions.size() << std::endl;
