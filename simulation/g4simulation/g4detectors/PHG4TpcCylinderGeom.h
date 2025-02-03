@@ -36,13 +36,13 @@ class PHG4TpcCylinderGeom : public PHG4CylinderGeom
   double get_etamin() const;
 
   virtual std::pair<double, double> get_zbounds(const int ibin) const;
-  virtual std::pair<double, double> get_phibounds(const int ibin) const;
+  virtual std::pair<double, double> get_phibounds(const int ibin, int side) const;
   virtual std::pair<double, double> get_etabounds(const int ibin) const;
   virtual double get_etacenter(const int ibin) const;
   virtual double get_zcenter(const int ibin) const;
-  virtual double get_phicenter(const int ibin) const;
+  virtual double get_phicenter(const int ibin, int side) const;
   virtual double get_phicenter_new(const int ibin) const;
-  virtual double get_phi(const float ibin) const;
+  virtual double get_phi(const float ibin, int side) const;
 
   virtual int get_etabin(const double eta) const;
   virtual int get_zbin(const double z) const;
