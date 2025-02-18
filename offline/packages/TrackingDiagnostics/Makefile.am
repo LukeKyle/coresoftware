@@ -16,6 +16,7 @@ pkginclude_HEADERS = \
   KshortReconstruction.h \
   TrackContainerCombiner.h \
   TrackResiduals.h \
+  TrackResiduals_kshort.h \	
   TrackSeedTrackMapConverter.h \
   TrkrNtuplizer.h
 
@@ -28,6 +29,7 @@ libTrackingDiagnostics_la_SOURCES = \
   KshortReconstruction.cc \
   TrackContainerCombiner.cc \
   TrackResiduals.cc \
+  TrackResiduals_kshort.cc \
   TrackSeedTrackMapConverter.cc \
   TrkrNtuplizer.cc
 
