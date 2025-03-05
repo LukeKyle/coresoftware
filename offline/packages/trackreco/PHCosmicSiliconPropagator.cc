@@ -254,6 +254,9 @@ int PHCosmicSiliconPropagator::process_event(PHCompositeNode* /*unused*/)
         bool isTpcKey = false;
         auto cluster = _cluster_map->findCluster(key);
         auto clusglob = _tgeometry->getGlobalPosition(key, cluster);
+	if(cluster->getMaxAdc() < m_adcCut){
+	  continue;
+	}
         if (TrkrDefs::getTrkrId(key) == TrkrDefs::TrkrId::tpcId ||
             TrkrDefs::getTrkrId(key) == TrkrDefs::TrkrId::micromegasId)
         {

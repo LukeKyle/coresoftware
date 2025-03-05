@@ -110,14 +110,14 @@ int PHCosmicSeeder::process_event(PHCompositeNode* /*unused*/)
       // sector = TpcDefs::getSectorId(ckey);
       // layer = TrkrDefs::getLayer(ckey);
 
-      const auto side = TpcDefs::getSide(ckey);
-      const auto sector = TpcDefs::getSectorId(ckey);
-      const auto layer = TrkrDefs::getLayer(ckey);
+      // const auto side = TpcDefs::getSide(ckey);
+      // const auto sector = TpcDefs::getSectorId(ckey);
+      // const auto layer = TrkrDefs::getLayer(ckey);
 
-      //t->Fill();
-      if(side==0 && ((sector==12 && layer>38) || (sector==14 && (layer>22 && layer<39)) || (sector==15 && (layer>6 && layer<23)) || (sector==19 && (layer>6 && layer<23)) || (sector==21 && (layer>22 && layer<39)) || (sector==22 && ((layer>22 && layer<39) || layer>38)) || (sector==23 && layer>38))) continue;
-      else if(side==1 && ((sector==2 && layer>38) || (sector==6 && (layer>22 && layer<39)) || (sector==8 && layer>38) || (sector==10 && layer>38))) continue;
-      if(side==0 || side==1) continue;
+      // //t->Fill();
+      // if(side==0 && ((sector==12 && layer>38) || (sector==14 && (layer>22 && layer<39)) || (sector==15 && (layer>6 && layer<23)) || (sector==19 && (layer>6 && layer<23)) || (sector==21 && (layer>22 && layer<39)) || (sector==22 && ((layer>22 && layer<39) || layer>38)) || (sector==23 && layer>38))) continue;
+      // else if(side==1 && ((sector==2 && layer>38) || (sector==6 && (layer>22 && layer<39)) || (sector==8 && layer>38) || (sector==10 && layer>38))) continue;
+      // if(side==0 || side==1) continue;
 
       const auto cluster = citer->second;
       if(cluster->getMaxAdc() < m_adcCut){
