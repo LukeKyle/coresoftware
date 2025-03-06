@@ -505,7 +505,7 @@ namespace
       training_hits = new TrainingHits;
       assert(training_hits);
       training_hits->radius = radius;
-      training_hits->phi = my_data.layergeom->get_phicenter(iphi_center + my_data.phioffset,my_data.side);
+      training_hits->phi = my_data.layergeom->get_phicenter(iphi_center + my_data.phioffset);
       double center_t = my_data.layergeom->get_zcenter(it_center + my_data.toffset) + my_data.sampa_tbias;
       training_hits->z = (my_data.m_tdriftmax - center_t) * my_data.tGeometry->get_drift_velocity();
       if (my_data.side == 0)

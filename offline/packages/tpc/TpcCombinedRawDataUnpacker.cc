@@ -271,8 +271,8 @@ int TpcCombinedRawDataUnpacker::process_event(PHCompositeNode* topNode)
       continue;
     }
 
-    //    uint16_t sampadd = tpchit->get_sampaaddress();
-    // uint16_t sampch = tpchit->get_sampachannel();
+    uint16_t sampadd = tpchit->get_sampaaddress();
+    uint16_t sampch = tpchit->get_sampachannel();
     //    uint16_t sam = tpchit->get_samples();
     max_time_range = tpchit->get_samples();
     varname = "phi";  // + std::to_string(key);
@@ -378,15 +378,15 @@ int TpcCombinedRawDataUnpacker::process_event(PHCompositeNode* topNode)
           int nh = 0;
 
           fXh[nh++] = _ievent - 1;
-          fXh[nh++] = 0;                        // gtm_bco;
-          fXh[nh++] = 0;                        // packet_id;
-          fXh[nh++] = 0;                        // ep;
+          fXh[nh++] = gtm_bco;                        // gtm_bco;
+          fXh[nh++] = packet_id;                        // packet_id;
+          fXh[nh++] = ep;                        // ep;
           fXh[nh++] = mc_sectors[sector % 12];  // Sector;
           fXh[nh++] = side;
           fXh[nh++] = fee;
-          fXh[nh++] = 0;  // channel;
-          fXh[nh++] = 0;  // sampadd;
-          fXh[nh++] = 0;  // sampch;
+          fXh[nh++] = channel;  // channel;
+          fXh[nh++] = sampadd;  // sampadd;
+          fXh[nh++] = sampch;  // sampch;
           fXh[nh++] = (float) phibin;
           fXh[nh++] = (float) t;
           fXh[nh++] = layer;
@@ -532,8 +532,8 @@ int TpcCombinedRawDataUnpacker::process_event(PHCompositeNode* topNode)
         {
           chan_info cinfo = (*chan_it).second;
           fee = cinfo.fee;
-          // hpedestal2 = cinfo.ped;
-          // hpedwidth2 = cinfo.width;
+          hpedestal2 = cinfo.ped;
+          hpedwidth2 = cinfo.width;
         }
 
         int rx = get_rx(layer);

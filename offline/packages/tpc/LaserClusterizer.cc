@@ -654,7 +654,6 @@ int LaserClusterizer::process_event(PHCompositeNode *topNode)
       
       for(int index = 0; index < (int) data.cluster_vector.size(); ++index)
       {
-<<<<<<< HEAD
         float_t fadc = hitr->second->getAdc();  // proper int rounding +0.5
         unsigned short adc = 0;
         if (fadc > m_adc_threshold)
@@ -727,12 +726,6 @@ int LaserClusterizer::process_event(PHCompositeNode *topNode)
 
         rtree.insert(std::make_pair(point(1.0 * layer, 1.0 * iphi, 1.0 * it), spechitkey));
         rtreeLaminations.insert(std::make_pair(point(1.0 * layer, 1.0 * iphi, 1.0 * it), spechitkey));
-=======
-	auto cluster = data.cluster_vector[index];
-	const auto ckey = data.cluster_key_vector[index];
-	
-	m_clusterlist->addClusterSpecifyKey(ckey, cluster);
->>>>>>> dd83c0a3c929133ef9492f22bf6e0d350c1fc505
       }
     }
   }
@@ -744,7 +737,6 @@ int LaserClusterizer::process_event(PHCompositeNode *topNode)
 
   return Fun4AllReturnCodes::EVENT_OK;
 
-<<<<<<< HEAD
 void LaserClusterizer::calc_cluster_parameter(std::vector<pointKeyLaser> &clusHits, std::multimap<unsigned int, std::pair<std::pair<TrkrDefs::hitkey, TrkrDefs::hitsetkey>, std::array<int, 3>>> &adcMap, bool isLamination)
 {
   double rSum = 0.0;
@@ -984,6 +976,4 @@ void LaserClusterizer::remove_hits(std::vector<pointKeyLaser> &clusHits, bgi::rt
       }
     }
   }
-=======
->>>>>>> dd83c0a3c929133ef9492f22bf6e0d350c1fc505
 }
