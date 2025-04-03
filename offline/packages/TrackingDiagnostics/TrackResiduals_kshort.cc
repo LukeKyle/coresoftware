@@ -1,6 +1,6 @@
 #include "TrackResiduals_kshort.h"
 
-//Includes for references classes
+//Includes for reference classes
 #include <fun4all/Fun4AllReturnCodes.h>
 #include <fun4all/Fun4AllServer.h>
 #include <g4detectors/PHG4TpcCylinderGeomContainer.h>
@@ -14,21 +14,38 @@
 #include <trackbase_historic/SvtxTrack.h>
 #include <trackbase_historic/SvtxTrackState.h>
 #include <trackbase_historic/SvtxTrackMap.h>
+#include <globalvertex/SvtxVertexMap.h>
 #include <trackbase_historic/TrackAnalysisUtils.h>
 
 // create anonymous namespace with functions that can only be used inside this
 // source file
 namespace
 {
+  // Function to square two numbers
   template <class T>
   inline T square(const T& t)
   {
     return t * t;
   }
+  // Function to compute radius of two numbers
   template <class T>
   inline T r(const T& x, const T& y)
   {
     return std::sqrt(square(x) + square(y));
+  }
+
+  std::vector<TrkrDefs::cluskey> get_cluster_keys(SvtxTrack* track)
+  {
+    std::vector<TrkrDefs::cluskey> out;
+    for (const auto& seed : {track->get_silicon_seed(), track->get_tpc_seed()})
+    {
+      if (seed)
+      {
+        std::copy(seed->begin_cluster_keys(), seed->end_cluster_keys(), std::back_inserter(out));
+      }
+    }
+
+    return out;
   }
 }
 
@@ -72,8 +89,19 @@ int TrackResiduals_kshort::InitRun(PHCompositeNode* topNode)
 //____________________________________________________________________________..
 int TrackResiduals_kshort::process_event(PHCompositeNode* topNode)
 {
+  auto clustermap = findNode::getClass<TrkrClusterContainer>(topNode, m_clusterContainerName);
+  auto trackmap = findNode::getClass<SvtxTrackMap>(topNode, m_trackMapName);
+
+  // Check to make sure nodes are present and, if not, abort process_event
+  if (!trackmap or !clustermap)
+  {
+    std::cout << "Missing node, can't continue" << std::endl;
+    return Fun4AllReturnCodes::ABORTEVENT;
+  }
+  
   fillResidualTreeKF(topNode);
   m_event++;
+  clearClusterStateVectors();
   return Fun4AllReturnCodes::EVENT_OK;
 }
 
@@ -111,6 +139,7 @@ void TrackResiduals_kshort::createBranches()
   m_tree->Branch("charge", &m_charge, "m_charge/I");
   m_tree->Branch("chisq", &m_chisq, "m_chisq/F");
   m_tree->Branch("clusAdc", &m_clusAdc);
+  m_tree->Branch("clusgr", &m_clusgr);
   m_tree->Branch("clusgx", &m_clusgx);
   m_tree->Branch("clusgy", &m_clusgy);
   m_tree->Branch("clusgz", &m_clusgz);
@@ -120,6 +149,10 @@ void TrackResiduals_kshort::createBranches()
   m_tree->Branch("clushitsetkey", &m_clushitsetkey);
   m_tree->Branch("cluskeys", &m_cluskeys);
   m_tree->Branch("cluslayer", &m_cluslayer);
+  m_tree->Branch("cluslx", &m_cluslx);
+  m_tree->Branch("cluslz", &m_cluslz);
+  m_tree->Branch("cluselx", &m_cluselx);
+  m_tree->Branch("cluselz", &m_cluselz);
   m_tree->Branch("clusMaxAdc", &m_clusMaxAdc);
   m_tree->Branch("clusphisize", &m_clusphisize);
   m_tree->Branch("clussector", &m_clsector);
@@ -149,6 +182,11 @@ void TrackResiduals_kshort::createBranches()
   m_tree->Branch("quality", &m_quality, "m_quality/F");
   m_tree->Branch("run", &m_runnumber, "m_runnumber/I");
   m_tree->Branch("tile", &m_tileid, "m_tileid/I");
+  m_tree->Branch("trackid", &m_trackid, "m_trackid/I");
+  m_tree->Branch("vertexid", &m_vertexid, "m_vertexid/I");
+  m_tree->Branch("vx", &m_vx, "m_vx/F");
+  m_tree->Branch("vy", &m_vy, "m_vy/F");
+  m_tree->Branch("vz", &m_vz, "m_vz/F");
 }
 
 
@@ -156,6 +194,7 @@ void TrackResiduals_kshort::createBranches()
 void TrackResiduals_kshort::fillClusterBranchesKF(TrkrDefs::cluskey ckey, SvtxTrack* track,const std::vector<std::pair<TrkrDefs::cluskey, Acts::Vector3>>& global,PHCompositeNode* topNode)
 {
   auto clustermap = findNode::getClass<TrkrClusterContainer>(topNode, m_clusterContainerName);
+  auto geometry = findNode::getClass<ActsGeometry>(topNode, "ActsGeometry");
 
   // move the corrected cluster positions back to the original readout surface
   auto global_moved = m_clusterMover.processTrack(global);
@@ -255,9 +294,62 @@ void TrackResiduals_kshort::fillClusterBranchesKF(TrkrDefs::cluskey ckey, SvtxTr
 
   m_cluskeys.push_back(ckey);
 
+  // get new local coords from moved cluster
+  Surface surf = geometry->maps().getSurface(ckey, cluster);
+  Surface surf_ideal = geometry->maps().getSurface(ckey, cluster); //Unchanged by distortion corrections
+  // if this is a TPC cluster, the crossing correction may have moved it across the central membrane, check the surface
+  auto trkrid = TrkrDefs::getTrkrId(ckey);
+  if (trkrid == TrkrDefs::tpcId)
+  {
+    TrkrDefs::hitsetkey hitsetkey = TrkrDefs::getHitSetKeyFromClusKey(ckey);
+    TrkrDefs::subsurfkey new_subsurfkey = 0;
+    surf = geometry->get_tpc_surface_from_coords(hitsetkey, clusglob_moved, new_subsurfkey);
+  }
+  if (!surf)
+  {
+    if (Verbosity() > 2)
+    {
+      std::cout << " Failed to find surface for cluskey " << ckey << std::endl;
+    }
+    return;
+  }
+
+  // get local coordinates
+  Acts::Vector2 loc;
+  clusglob_moved *= Acts::UnitConstants::cm;  // we want mm for transformations
+  Acts::Vector3 normal = surf->normal(geometry->geometry().getGeoContext());
+  auto local = surf->globalToLocal(geometry->geometry().getGeoContext(),
+                                   clusglob_moved, normal);
+  if (local.ok())
+  {
+    loc = local.value() / Acts::UnitConstants::cm;
+  }
+  else
+  {
+    // otherwise take the manual calculation for the TPC
+    // doing it this way just avoids the bounds check that occurs in the surface class method
+    Acts::Vector3 loct = surf->transform(geometry->geometry().getGeoContext()).inverse() * clusglob_moved;  // global is in mm
+    loct /= Acts::UnitConstants::cm;
+
+    loc(0) = loct(0);
+    loc(1) = loct(1);
+  }
+
+  clusglob_moved /= Acts::UnitConstants::cm;  // we want cm for the tree
+
+  m_cluslx.push_back(loc.x());
+  m_cluslz.push_back(loc.y());
+
+  float clusr = r(clusglob_moved.x(), clusglob_moved.y());
+  auto para_errors = m_clusErrPara.get_clusterv5_modified_error(cluster,
+                                                                clusr, ckey);
+
+  m_cluselx.push_back(sqrt(para_errors.first));
+  m_cluselz.push_back(sqrt(para_errors.second));
   m_clusgx.push_back(clusglob_moved.x());
   m_clusgy.push_back(clusglob_moved.y());
   m_clusgz.push_back(clusglob_moved.z());
+  m_clusgr.push_back(clusglob_moved.y() > 0 ? clusr : -1 * clusr);
   m_clusgxunmoved.push_back(clusglob.x());
   m_clusgyunmoved.push_back(clusglob.y());
   m_clusgzunmoved.push_back(clusglob.z());
@@ -273,7 +365,9 @@ void TrackResiduals_kshort::fillClusterBranchesKF(TrkrDefs::cluskey ckey, SvtxTr
 // Fills residual tree with track information
 void TrackResiduals_kshort::fillResidualTreeKF(PHCompositeNode* topNode)
 {
- auto trackmap = findNode::getClass<SvtxTrackMap>(topNode, m_trackMapName);
+  auto clustermap = findNode::getClass<TrkrClusterContainer>(topNode, m_clusterContainerName);
+  auto trackmap = findNode::getClass<SvtxTrackMap>(topNode, m_trackMapName);
+  auto vertexmap = findNode::getClass<SvtxVertexMap>(topNode, "SvtxVertexMap");
  
  // Begin loop over tracks
  for (const auto& [key, track] : *trackmap)
@@ -283,7 +377,9 @@ void TrackResiduals_kshort::fillResidualTreeKF(PHCompositeNode* topNode)
 	 continue;
        }
 
-    m_crossing = track->get_crossing();
+     m_trackid = track->get_id();
+     
+     m_crossing = track->get_crossing();
     m_px = track->get_px();
     m_py = track->get_py();
     m_pz = track->get_pz();
@@ -297,12 +393,79 @@ void TrackResiduals_kshort::fillResidualTreeKF(PHCompositeNode* topNode)
     m_chisq = track->get_chisq();
     m_ndf = track->get_ndf();
 
-    Acts::Vector3 zero = Acts::Vector3::Zero();
-    auto dcapair = TrackAnalysisUtils::get_dca(track, zero);
-    m_dcaxy = dcapair.first.first;
-    m_dcaz = dcapair.second.first;
+    m_nmaps = 0;
+    m_nmapsstate = 0;
+    m_nintt = 0;
+    m_ninttstate = 0;
+    m_ntpc = 0;
+    m_ntpcstate = 0;
+    m_nmms = 0;
+    m_nmmsstate = 0;
+
+    m_dcaxy = std::numeric_limits<float>::quiet_NaN();
+    m_dcaz = std::numeric_limits<float>::quiet_NaN();
+
+    m_vertexid = track->get_vertex_id();
+    if (vertexmap)
+    {
+      auto vertexit = vertexmap->find(m_vertexid);
+      if (vertexit != vertexmap->end())
+      {
+        auto vertex = vertexit->second;
+        m_vx = vertex->get_x();
+        m_vy = vertex->get_y();
+        m_vz = vertex->get_z();
+        Acts::Vector3 v(m_vx, m_vy, m_vz);
+        auto dcapair = TrackAnalysisUtils::get_dca(track, v);
+        m_dcaxy = dcapair.first.first;
+        m_dcaz = dcapair.second.first;
+      }
+    }
 
     clearClusterStateVectors();
-    m_tree->Fill();
+    if (Verbosity() > 1)
+    {
+      std::cout << "Track " << key << " has cluster/states"
+                << std::endl;
+    }
+
+    // get the fully corrected cluster global positions
+    std::vector<std::pair<TrkrDefs::cluskey, Acts::Vector3>> global_raw;
+    for (const auto& ckey : get_cluster_keys(track))
+    {
+      auto cluster = clustermap->findCluster(ckey);
+
+      // Fully correct the cluster positions for the crossing and all distortions
+      Acts::Vector3 global = m_globalPositionWrapper.getGlobalPositionDistortionCorrected(ckey, cluster, m_crossing );
+
+      // add the global positions to a vector to give to the cluster mover
+      global_raw.emplace_back(std::make_pair(ckey, global));
+    }
+
+    // move the cluster positions back to the original readout surface in the fillClusterBranchesKF method
+
+    if (!m_doAlignment)
+    {
+      for (const auto& ckey : get_cluster_keys(track))
+      {
+        fillClusterBranchesKF(ckey, track, global_raw, topNode);
+      }
+    }
+
+    if (m_nmms > 0 || !m_doMicromegasOnly)
+    {
+      m_tree->Fill();
+    }
+
+      // pick up edits from here ////////////////////////
+
+    // Acts::Vector3 zero = Acts::Vector3::Zero();
+    // auto dcapair = TrackAnalysisUtils::get_dca(track, zero);
+    // m_dcaxy = dcapair.first.first;
+    // m_dcaz = dcapair.second.first;
+
+    // clearClusterStateVectors();
+    // m_tree->Fill();
+    
   }  // end loop over tracks
 }

@@ -61,13 +61,21 @@ class TrackResiduals_kshort : public SubsysReco
   TFile *m_outfile = nullptr;
   TTree *m_tree = nullptr;
 
+  bool m_doAlignment = false;
+  bool m_doMicromegasOnly = false;
+
   // Private member variables for TTree variables
   int m_charge = std::numeric_limits<int>::quiet_NaN();
   float m_chisq = std::numeric_limits<float>::quiet_NaN();
   std::vector<float> m_clusAdc;
+  std::vector<float> m_cluslx;
+  std::vector<float> m_cluslz;
+  std::vector<float> m_cluselx;
+  std::vector<float> m_cluselz;
   std::vector<float> m_clusgx;
   std::vector<float> m_clusgy;
   std::vector<float> m_clusgz;
+  std::vector<float> m_clusgr;
   std::vector<float> m_clusgxunmoved;
   std::vector<float> m_clusgyunmoved;
   std::vector<float> m_clusgzunmoved;
@@ -103,6 +111,12 @@ class TrackResiduals_kshort : public SubsysReco
   float m_quality = std::numeric_limits<float>::quiet_NaN();
   int m_runnumber = -1;
   int m_tileid = std::numeric_limits<int>::quiet_NaN();
+  unsigned int m_trackid = std::numeric_limits<unsigned int>::quiet_NaN();
+  unsigned int m_vertexid = std::numeric_limits<unsigned int>::quiet_NaN();
+  float m_vx = std::numeric_limits<float>::quiet_NaN();
+  float m_vy = std::numeric_limits<float>::quiet_NaN();
+  float m_vz = std::numeric_limits<float>::quiet_NaN();
+  
 
   // Private member variables for function arguments
   std::string m_clusterContainerName = "TRKR_CLUSTER";
