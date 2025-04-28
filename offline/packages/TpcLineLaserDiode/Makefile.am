@@ -29,7 +29,7 @@ noinst_PROGRAMS = \
   testexternals
 
 testexternals_SOURCES = testexternals.cc
-testexternals_LDADD   = libTpcLineLaserDiode.la
+testexternals_LDADD   = libTpcLineLaserDiode.la  -lNoRootEvent -lffarawobjects
 
 testexternals.cc:
 	echo "//*** this is a generated file. Do not commit, do not edit" > $@

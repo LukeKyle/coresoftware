@@ -23,8 +23,8 @@ class TpcDiode : public PHObject
   // virtual uint16_t get_fee() const { return std::numeric_limits<uint16_t>::max(); }
   // virtual void set_fee(const uint16_t) { return; }
 
-  // virtual uint16_t get_channel() const { return std::numeric_limits<uint16_t>::max(); }
-  // virtual void set_channel(const uint16_t) { return; }
+  virtual uint16_t get_channel() const { return std::numeric_limits<uint16_t>::max(); }
+  virtual void set_channel(const uint16_t) { return; }
 
   // virtual uint16_t get_sampaaddress() const { return std::numeric_limits<uint16_t>::max(); }
   // virtual void set_sampaaddress(const uint16_t) { return; }
@@ -38,6 +38,21 @@ class TpcDiode : public PHObject
   virtual uint16_t get_adc(const uint16_t /*sample*/) const { return std::numeric_limits<uint16_t>::max(); }
   virtual void set_adc(const uint16_t /*sample*/, const uint16_t) { return; }
 
+  virtual uint16_t get_maxadc() const { return std::numeric_limits<uint16_t>::max(); }
+  virtual void set_maxadc(const uint16_t) { return; }
+
+  virtual uint16_t get_maxbin() const { return std::numeric_limits<uint16_t>::max(); }
+  virtual void set_maxbin(const uint16_t) { return; }
+
+  virtual double get_integral() const { return std::numeric_limits<double>::max(); }
+  virtual void set_integral(const double) { return; }
+
+  virtual uint16_t get_nabovethreshold() const { return std::numeric_limits<uint16_t>::max(); }
+  virtual void set_nabovethreshold(const uint16_t) { return; }
+
+  virtual double get_pulsewidth() const { return std::numeric_limits<double>::max(); }
+  virtual void set_pulsewidth(const double) { return; }
+  
   // virtual uint16_t get_type() const { return std::numeric_limits<uint16_t>::max(); }
   // virtual void set_type(const uint16_t) { return; }
 

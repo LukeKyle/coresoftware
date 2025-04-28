@@ -35,8 +35,23 @@ class TpcDiodev1 : public TpcDiode
   // uint16_t get_fee() const override { return fee; }
   // void set_fee(const uint16_t val) override { fee = val; }
 
-  // uint16_t get_channel() const override { return channel; }
-  // void set_channel(const uint16_t val) override { channel = val; }
+  uint16_t get_channel() const override { return channel; }
+  void set_channel(const uint16_t val) override { channel = val; }
+
+  uint16_t get_maxadc() const override { return maxadc; }
+  void set_maxadc(const uint16_t val) override { maxadc = val; }
+
+  uint16_t get_maxbin() const override { return maxbin; }
+  void set_maxbin(const uint16_t val) override { maxbin = val; }
+
+  double get_integral() const override { return integral; }
+  void set_integral(const double val) override { integral = val; }
+
+  double get_pulsewidth() const override { return pulsewidth; }
+  void set_pulsewidth(const double val) override { pulsewidth = val; }
+
+  uint16_t get_nabovethreshold() const override { return nabovethreshold; }
+  void set_nabovethreshold(const uint16_t val) override { nabovethreshold = val; }
 
   // uint16_t get_sampaaddress() const override { return sampaaddress; }
   // void set_sampaaddress(const uint16_t val) override { sampaaddress = val; }
@@ -68,49 +83,54 @@ class TpcDiodev1 : public TpcDiode
   }
 
 
-  class AdcIteratorv1 : public AdcIterator
-    {
-     private:
-      const std::vector<uint16_t> & m_adc;
-      uint16_t m_index = 0;
+  // class AdcIteratorv1 : public AdcIterator
+  //   {
+  //    private:
+  //     const std::vector<uint16_t> & m_adc;
+  //     uint16_t m_index = 0;
 
-     public:
-      explicit AdcIteratorv1(const std::vector<uint16_t> & adc)
-        : m_adc(adc)
-      {
-      }
+  //    public:
+  //     explicit AdcIteratorv1(const std::vector<uint16_t> & adc)
+  //       : m_adc(adc)
+  //     {
+  //     }
 
-      void First() override { m_index = 0; }
+  //     void First() override { m_index = 0; }
 
-      void Next() override { ++m_index; }
+  //     void Next() override { ++m_index; }
 
-      bool IsDone() const override { return m_index >= m_adc.size(); }
+  //     bool IsDone() const override { return m_index >= m_adc.size(); }
 
-      uint16_t CurrentTimeBin() const override
-      {
-        return m_index;   
-      }
-      uint16_t CurrentAdc() const override
-      {
-        if (!IsDone())
-        {
-          return m_adc[m_index];
-        }
-        return std::numeric_limits<uint16_t>::max();  // Or throw an exception
-      }
-    };
+  //     uint16_t CurrentTimeBin() const override
+  //     {
+  //       return m_index;   
+  //     }
+  //     uint16_t CurrentAdc() const override
+  //     {
+  //       if (!IsDone())
+  //       {
+  //         return m_adc[m_index];
+  //       }
+  //       return std::numeric_limits<uint16_t>::max();  // Or throw an exception
+  //     }
+  //   };
 
-    AdcIterator* CreateAdcIterator() const override { return new AdcIteratorv1(adc); }
+    // AdcIterator* CreateAdcIterator() const override { return new AdcIteratorv1(adc); }
 
    private:
     // uint64_t bco = std::numeric_limits<uint64_t>::max();
     // uint64_t gtm_bco = std::numeric_limits<uint64_t>::max();
     int32_t packetid = std::numeric_limits<int32_t>::max();
     // uint16_t fee = std::numeric_limits<uint16_t>::max();
-    // uint16_t channel = std::numeric_limits<uint16_t>::max();
+    uint16_t channel = std::numeric_limits<uint16_t>::max();
     // uint16_t sampaaddress = std::numeric_limits<uint16_t>::max();
     // uint16_t sampachannel = std::numeric_limits<uint16_t>::max();
     uint16_t samples = std::numeric_limits<uint16_t>::max();
+    uint16_t maxadc = std::numeric_limits<uint16_t>::max();
+    uint16_t maxbin = std::numeric_limits<uint16_t>::max();
+    double integral = std::numeric_limits<uint16_t>::max();
+    double pulsewidth = std::numeric_limits<uint16_t>::max();
+    uint16_t nabovethreshold = std::numeric_limits<uint16_t>::max();
 
     //! adc value for each sample
     std::vector<uint16_t> adc;

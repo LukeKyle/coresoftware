@@ -59,3 +59,118 @@ TpcDiode *TpcDiodeContainerv1::get_diode(unsigned int index)
 {
   return (TpcDiode *) TpcDiodesTCArray->At(index);
 }
+
+unsigned int TpcDiodeContainerv1::get_Laser()
+{
+  int laser=-1;
+  int nlasers=0;
+  int threshold=0;
+  for(int c=0;c<32;c++)
+    {
+      if(c>3||(c<16||c>19)) continue;
+      TpcDiode *EMon = (TpcDiode *)TpcDiodesTCArray->At(c);
+      int maxadc = EMon->get_maxadc();
+      if(maxadc>threshold)
+	{
+	  laser=c;
+	  nlasers++;
+	}
+    }
+  if(nlasers>1)
+    {
+      std::cout << "More than one laser fired!" << std::endl;
+      return -1;
+    }
+  if(laser<0)
+    {
+      std::cout << "No laser fired!" << std::endl;
+      return laser;
+    }
+  return laser;
+}
+
+// code below this point needs to be rewritten!!!
+
+std::vector<TpcDiode*> TpcDiodeContainerv1::get_PO1()
+{
+  std::vector<TpcDiode*> PO1;
+
+  unsigned int laser = get_Laser();
+
+  if(laser==0||laser==1||laser==2||laser==3)
+    {
+      PO1.push_back(get_diode(4));
+      PO1.push_back(get_diode(5));
+      PO1.push_back(get_diode(6));
+      PO1.push_back(get_diode(7));
+    }
+
+  else if(laser==16||laser==17||laser==18||laser==19)
+    {
+      PO1.push_back(get_diode(20));
+      PO1.push_back(get_diode(21));
+      PO1.push_back(get_diode(22));
+      PO1.push_back(get_diode(23));
+    }
+  else
+    {
+      std::cout << "No laser fired in this event!" << std::endl;
+    }
+  return PO1;
+}
+
+std::vector<TpcDiode*> TpcDiodeContainerv1::get_PO2()
+{
+  std::vector<TpcDiode*> PO2;
+  
+  unsigned int laser = get_Laser();
+  
+  if(laser==0||laser==1||laser==2||laser==3)
+    {
+      PO2.push_back(get_diode(8));
+      PO2.push_back(get_diode(9));
+      PO2.push_back(get_diode(10));
+      PO2.push_back(get_diode(11));
+    }
+
+  else if(laser==16||laser==17||laser==18||laser==19)
+    {
+      PO2.push_back(get_diode(24));
+      PO2.push_back(get_diode(25));
+      PO2.push_back(get_diode(26));
+      PO2.push_back(get_diode(27));
+    }
+  else
+    {
+      std::cout << "No laser fired in this event!" << std::endl;
+    }
+  return PO2;
+}
+
+std::vector<TpcDiode*> TpcDiodeContainerv1::get_EGG()
+{
+  std::vector<TpcDiode*> EGG;
+  
+  unsigned int laser = get_Laser();
+
+  if(laser==0||laser==1||laser==2||laser==3)
+    {
+      EGG.push_back(get_diode(12));
+      EGG.push_back(get_diode(13));
+      EGG.push_back(get_diode(14));
+      EGG.push_back(get_diode(15));
+    }
+
+  else if(laser==16||laser==17||laser==18||laser==19)
+    {
+      EGG.push_back(get_diode(28));
+      EGG.push_back(get_diode(29));
+      EGG.push_back(get_diode(30));
+      EGG.push_back(get_diode(31));
+    }
+  else
+    {
+      std::cout << "No laser fired in this event!" << std::endl;
+    }
+  return EGG;
+}

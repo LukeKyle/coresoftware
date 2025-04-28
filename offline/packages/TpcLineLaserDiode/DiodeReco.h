@@ -29,13 +29,18 @@ class DiodeReco : public SubsysReco
   double MaxAdc(int avg, int low_bin=0,int high_bin=9999); // Signal is averaged over "avg" number of bins interatively within the bin range [low_bin,high_bin]
   int MaxBin(int avg);
   double Integral(int low_bin,int high_bin);
-  // int NAboveThreshold(double upper_thr,double lower_thr);
-  // double PulseWidth(double upper_thr,double lower_thr);
-  // void PedestalCorrection(int low_bin,int high_bin);
+  int NAboveThreshold(double upper_thr,double lower_thr);
+  double PulseWidth(double upper_thr,double lower_thr);
+  void PedestalCorrected(int low_bin,int high_bin);
 
 private:
   TCanvas *c_waveforms;
+  TCanvas *c_persistency_N;
+  TCanvas *c_persistency_S;
+  TH2F *persistency[32];
   TH2F *waveforms;
+
+  int event=0;
 };
 
 #endif
