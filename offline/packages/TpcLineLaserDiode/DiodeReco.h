@@ -10,6 +10,7 @@
 class PHCompositeNode;
 class TH2F;
 class TCanvas;
+class TpcDiodeContainer;
 //class TpcDiode;
 //class packet;
 
@@ -34,13 +35,16 @@ class DiodeReco : public SubsysReco
   void PedestalCorrected(int low_bin,int high_bin);
 
 private:
-  TCanvas *c_waveforms;
-  TCanvas *c_persistency_N;
-  TCanvas *c_persistency_S;
-  TH2F *persistency[32];
-  TH2F *waveforms;
+  TpcDiodeContainer *diodes = nullptr;
+  std::string m_DiodeContainerName;
+  
+  // TCanvas *c_waveforms;
+  // TCanvas *c_persistency_N;
+  // TCanvas *c_persistency_S;
+  // TH2F *persistency[32];
+  // TH2F *waveforms;
 
-  int event=0;
+  // int event=0;
 };
 
 #endif

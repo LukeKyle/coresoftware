@@ -1,13 +1,13 @@
 #include "DiodeReco.h"
 
 #include <fun4all/Fun4AllReturnCodes.h>
+#include <phool/PHCompositeNode.h>
 #include <phool/PHIODataNode.h>    // for PHIODataNode
 #include <phool/PHNodeIterator.h>  // for PHNodeIterator
 #include <phool/PHObject.h>        // for PHObject
 #include <phool/getClass.h>
 
-
-//#include <ffarawobjects/TpcDiodeContainerv1.h>
+#include <ffarawobjects/TpcDiodeContainerv1.h>
 #include <ffarawobjects/TpcDiodev1.h>
 
 #include <Event/Event.h>
@@ -25,6 +25,7 @@ using namespace std;
 DiodeReco::DiodeReco(const std::string& name)
   : SubsysReco(name)
 {
+  m_DiodeContainerName = "TPCDIODES";
   for(int c=0;c<32;c++)
     {
       adc.clear();
@@ -37,11 +38,35 @@ int DiodeReco::Init(PHCompositeNode*)
   return Fun4AllReturnCodes::EVENT_OK;
 }
 
-int DiodeReco::InitRun(PHCompositeNode*)
+int DiodeReco::InitRun(PHCompositeNode *topNode)
 {
+  PHNodeIterator iter(topNode);
+  PHCompositeNode *dstNode = dynamic_cast<PHCompositeNode *>(iter.findFirst("PHCompositeNode", "DST"));
+  if (!dstNode)
+    {
+      dstNode = new PHCompositeNode("DST");
+      topNode->addNode(dstNode);
+    }
+  
+  PHNodeIterator iterDst(dstNode);
+  PHCompositeNode *detNode = dynamic_cast<PHCompositeNode *>(iterDst.findFirst("PHCompositeNode", "TPC"));
+  if (!detNode)
+    {
+      detNode = new PHCompositeNode("TPC");
+      dstNode->addNode(detNode);
+    }
+  
+  TpcDiodeContainer *tpcdiodecont = findNode::getClass<TpcDiodeContainer>(detNode, m_DiodeContainerName);
+  if (!tpcdiodecont)
+    {
+      tpcdiodecont = new TpcDiodeContainerv1();
+      PHIODataNode<PHObject> *newNode = new PHIODataNode<PHObject>(tpcdiodecont, m_DiodeContainerName, "PHObject");
+      detNode->addNode(newNode);
+    }
+  
   // char name[100];
   // char title[100];
-  
+      
   // c_persistency_N = new TCanvas("c_persistency_N","c_persistency_N",800,600);
   // c_persistency_N->Divide(4,4);
   // c_persistency_S = new TCanvas("c_persistency_S","c_persistency_S",800,600);
@@ -67,7 +92,9 @@ int DiodeReco::process_event(PHCompositeNode *topNode)
       return Fun4AllReturnCodes::DISCARDEVENT;
     }
 
-  _event->identify();
+  diodes = findNode::getClass<TpcDiodeContainer>(topNode, "TPCDIODES");
+
+  //_event->identify();
   caen_correction *cc = 0;
   Packet *p = _event->getPacket(2000);
   if (p)
@@ -92,6 +119,17 @@ int DiodeReco::process_event(PHCompositeNode *topNode)
 	{
 	  cc->init(p);
 	}
+
+      //auto newdiode = std::make_unique<TpcDiodev1>();
+      TpcDiodev1 *newdiode = new TpcDiodev1();
+      // uint16_t packetid;
+      // uint16_t channel;
+      // uint16_t maxadc;
+      // uint16_t maxbin;
+      // double integral;
+      // uint16_t nabovethreshold;
+      // double pulsewidth;
+      // uint16_t samples;
       
       for(int c=0;c<32;c++)
 	{
@@ -101,18 +139,18 @@ int DiodeReco::process_event(PHCompositeNode *topNode)
 	    }
       
 	  PedestalCorrected(0,200);
-	  uint16_t maxadc = MaxAdc(2,150,300);
+	  uint16_t maxadc = MaxAdc(2,200,300);
 	  uint16_t maxbin = MaxBin(2);
 	  double integral = Integral(0,1024);
 	  uint16_t nabovethreshold = NAboveThreshold(200,100);
 	  double pulsewidth = PulseWidth(200,100);
 	  const uint16_t samples = adc.size();
 
-	  //auto newdiode = std::make_unique<TpcDiodev1>();
-	  TpcDiodev1 *newdiode = new TpcDiodev1();
+	  uint16_t packetid=2000;
+	  uint16_t channel=c;
 
-	  newdiode->set_packetid(2000);
-	  newdiode->set_channel(c);
+	  newdiode->set_packetid(packetid);
+	  newdiode->set_channel(channel);
 	  newdiode->set_maxadc(maxadc);
 	  newdiode->set_maxbin(maxbin);
 	  newdiode->set_integral(integral);
@@ -125,8 +163,9 @@ int DiodeReco::process_event(PHCompositeNode *topNode)
 	      uint16_t adcval = adc[s];
 	      newdiode->set_adc(s,adcval);
 	    }
-	  
-	  //cout << newdiode->get_channel() << endl;
+
+	  diodes->AddDiode(newdiode);
+	  adc.clear();
 	}
       
       // int laser=-1;
@@ -141,19 +180,19 @@ int DiodeReco::process_event(PHCompositeNode *topNode)
 
       // 	if(c<4||(c>15&&c<20))
       // 	  {
-      // 	    int maxadc = MaxAdc(2,200,300);
-      // 	    if(maxadc>200)
+      // 	    int max = MaxAdc(2,200,300);
+      // 	    if(max>200)
       // 	      {
       // 		laser=c;
       // 		cout << laser << endl;
-      // 		cout << maxadc << endl;
+      // 		cout << max << endl;
       // 		nlaser++;
       // 	      }
       // 	  }
       // 	adc.clear();
       // }
 
-      // cout << "Event: " << event << " " << "Laser: " << laser << endl;
+      // cout <<  "Laser: " << laser << endl;
 
       // if(event==2){
       // 	  for(int c=0;c<32;c++)
@@ -191,8 +230,19 @@ int DiodeReco::process_event(PHCompositeNode *topNode)
       // 	    }
       // }
       //p->dump();
+      cout << diodes->get_Laser() << endl;
+      // for(int c=0;c<32;c++){
+      // 	cout << diodes->get_diode(c)->get_maxadc() << endl;
+      // }
       delete p;
+      newdiode->Clear();
     }
+
+  //diodes->identify();
+  //cout << "Hello" << endl;
+  //cout << diodes->get_ndiodes() << endl;
+    
+  //cout << diodes->get_Laser() << endl;
   
   // c_waveforms->cd();
   // waveforms->Draw("LEGO");

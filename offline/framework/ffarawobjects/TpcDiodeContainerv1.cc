@@ -63,22 +63,26 @@ TpcDiode *TpcDiodeContainerv1::get_diode(unsigned int index)
 unsigned int TpcDiodeContainerv1::get_Laser()
 {
   int laser=-1;
-  int nlasers=0;
-  int threshold=0;
+  std::vector<int> nlasers;
+  int threshold=200;
   for(int c=0;c<32;c++)
     {
-      if(c>3||(c<16||c>19)) continue;
-      TpcDiode *EMon = (TpcDiode *)TpcDiodesTCArray->At(c);
+      if((c>3&&c<16)||c>19) continue;
+      TpcDiode *EMon = get_diode(c);
       int maxadc = EMon->get_maxadc();
       if(maxadc>threshold)
 	{
 	  laser=c;
-	  nlasers++;
+	  nlasers.push_back(c);
 	}
     }
-  if(nlasers>1)
+  if(nlasers.size()>1)
     {
       std::cout << "More than one laser fired!" << std::endl;
+      for(int l=0;l<static_cast<int>(nlasers.size());l++)
+	{
+	  std::cout << "Laser " << nlasers[l] << " fired" << std::endl;
+	}
       return -1;
     }
   if(laser<0)
