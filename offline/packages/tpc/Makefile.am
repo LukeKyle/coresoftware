@@ -56,7 +56,8 @@ pkginclude_HEADERS = \
   TpcLoadDistortionCorrection.h \
   TpcMap.h \
   TpcRawWriter.h \
-  TpcSimpleClusterizer.h
+  TpcSimpleClusterizer.h \
+  TpcTimeClusterizer.h
 
 ROOTDICTS = \
   LaserEventInfo_Dict.cc \
@@ -92,6 +93,7 @@ libtpc_la_SOURCES = \
   TpcMap.cc \
   TpcRawWriter.cc \
   TpcSimpleClusterizer.cc \
+  TpcTimeClusterizer.cc \
   TpcClusterMover.cc \
   TpcClusterZCrossingCorrection.cc \
   TpcDistortionCorrection.cc
